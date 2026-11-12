@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>保格式翻译</title>
+<style>
+  :root{
+    --bg:#f5f3ef; --card:#ffffff; --ink:#1b1c1e; --muted:#8b8b90;
+    --line:#e6e2da; --accent:#1f4e79; --accent-soft:#eaf1f8;
+    --ok:#2f7d5d; --err:#b3452f;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"Segoe UI","Microsoft YaHei UI","PingFang SC",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:860px; margin:0 auto; padding:48px 24px 80px}
+  header{margin-bottom:28px}
+  h1{margin:0 0 6px; font-size:26px; letter-spacing:.5px; font-weight:650}
+  .sub{margin:0; color:var(--muted); font-size:14px}
+
+  .ollrow{
+    display:none; align-items:center; gap:10px; margin:-4px 0 14px;
+    font-size:12.5px; color:var(--muted); flex-wrap:wrap;
+  }
+  .ollrow.on{display:flex}
+  .ollrow input{
+    flex:1; min-width:240px; border:1px solid var(--line); border-radius:8px;
+    padding:7px 10px; font-size:12.5px; font-family:inherit; background:#fff;
+  }
+  .ollrow button{
+    border:1px solid var(--line); background:#fff; color:var(--accent);
+    padding:7px 14px; border-radius:8px; font-size:12.5px; cursor:pointer; font-family:inherit;
+  }
+  .engine{
+    display:flex; gap:18px; flex-wrap:wrap; margin-bottom:12px;
+    font-size:13px; color:var(--muted);
+  }
+  .engine label{display:flex; align-items:center; gap:6px; cursor:pointer}
+  .engine input{accent-color:var(--accent)}
+  .bi{
+    display:flex; align-items:center; gap:8px; margin-bottom:14px;
+    font-size:13px; color:var(--muted); cursor:pointer; user-select:none;
+  }
+  .bi input{width:15px; height:15px; accent-color:var(--accent); cursor:pointer}
+  .tabs{display:flex; gap:6px; margin-bottom:20px; border-bottom:1px solid var(--line)}
+  .tab{
+    background:none; border:none; border-bottom:2px solid transparent; padding:10px 18px;
+    font-size:14.5px; color:var(--muted); cursor:pointer; font-family:inherit; margin-bottom:-1px;
+  }
+  .tab.on{color:var(--accent); border-bottom-color:var(--accent); font-weight:600}
+  .convbar{display:flex; align-items:center; gap:10px; margin-top:16px; font-size:13.5px; color:var(--muted)}
+  .convbar select{
+    border:1px solid var(--line); border-radius:8px; padding:8px 12px;
+    font-size:13.5px; font-family:inherit; background:#fff; color:var(--ink);
+  }
+  .convhint{font-size:12.5px}
+  .keybar{
+    display:none; align-items:center; gap:10px; flex-wrap:wrap;
+    background:#fff7e6; border:1px solid #f0d9a8; color:#7a5a12;
+    border-radius:12px; padding:11px 16px; margin-bottom:14px; font-size:13px;
+  }
+  .keybar.on{display:flex}
+  .keybar select{
+    border:1px solid #e3d3ae; border-radius:8px; padding:7px 10px;
+    font-size:13px; font-family:inherit; background:#fff; color:#7a5a12;
+  }
+  .keybar .cx{display:none}
+  .keybar .cx.on{display:block}
+  .setlink{
+    display:inline-block; margin-top:14px; color:var(--muted); font-size:12.5px;
+    cursor:pointer; text-decoration:underline dotted;
+  }
+  .keybar input{
+    flex:1; min-width:200px; border:1px solid #e3d3ae; border-radius:8px;
+    padding:7px 10px; font-size:13px; font-family:inherit; background:#fff;
+  }
+  .keybar button{
+    border:none; background:#7a5a12; color:#fff; padding:7px 16px;
+    border-radius:8px; font-size:13px; cursor:pointer; font-family:inherit;
+  }
+  .dirs{display:flex; gap:8px; margin-bottom:16px}  .dirs button{
+    border:1px solid var(--line); background:var(--card); color:var(--muted);
+    padding:8px 18px; border-radius:999px; font-size:13.5px; cursor:pointer;
+    font-family:inherit; transition:.18s;
+  }
+  .dirs button.active{background:var(--accent); border-color:var(--accent); color:#fff}
+
+  .drop{
+    position:relative; background:var(--card); border:1.5px dashed var(--line);
+    border-radius:18px; padding:56px 24px; text-align:center; cursor:pointer;
+    transition:.2s; box-shadow:0 1px 2px rgba(0,0,0,.03);
+  }
+  .drop:hover, .drop.over{border-color:var(--accent); background:var(--accent-soft)}
+  .drop .ico{font-size:34px; margin-bottom:12px; opacity:.75}
+  .drop .t1{font-size:15.5px; font-weight:600; margin-bottom:6px}
+  .drop .t2{font-size:13px; color:var(--muted)}
+  .drop input{display:none}
+
+  .list{margin-top:22px; display:flex; flex-direction:column; gap:12px}
+  .task{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:16px 18px; display:flex; flex-direction:column; gap:9px;
+    box-shadow:0 1px 2px rgba(0,0,0,.03); animation:in .25s ease;
+  }
+  @keyframes in{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+  .row{display:flex; align-items:center; justify-content:space-between; gap:12px}
+  .fname{font-size:14px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .status{font-size:12.5px; color:var(--muted); white-space:nowrap}
+  .status.ok{color:var(--ok)} .status.err{color:var(--err)}
+  .bar{height:6px; background:#eee9e0; border-radius:99px; overflow:hidden}
+  .bar i{display:block; height:100%; width:0; background:var(--accent); border-radius:99px; transition:width .4s}
+  .bar.err i{background:var(--err)}
+  .acts{display:flex; gap:8px; align-items:center; margin-top:2px}
+  .dl{
+    text-decoration:none; font-size:13.5px; font-weight:600; color:#fff;
+    background:var(--accent); padding:8px 18px; border-radius:10px;
+  }
+  .dl:hover{filter:brightness(1.08)}
+  .ghost.hot{border-color:#d08a2a; color:#9a6210; background:#fff7e6}
+  .ghost{
+    background:transparent; border:1px solid var(--line); color:var(--accent);
+    padding:8px 16px; border-radius:10px; font-size:13px; cursor:pointer; font-family:inherit;
+  }
+  .ghost:hover{background:var(--accent-soft)}
+  .ghost:disabled{opacity:.5; cursor:default}
+
+  .check{
+    margin-top:8px; border-top:1px dashed var(--line); padding-top:12px;
+    font-size:12.5px; color:var(--muted); display:flex; flex-direction:column; gap:8px;
+  }
+  .check-head{color:var(--ink); font-weight:600; font-size:13px}
+  .check-item{
+    background:#faf8f4; border-radius:10px; padding:10px 14px 10px 12px;
+    display:grid; gap:3px; position:relative;
+  }
+  .co{color:#3b3b40; line-height:1.5}
+  .cb{color:var(--err); line-height:1.5}
+  .cr{position:absolute; right:12px; top:9px; font-size:11px; color:#b9b9bd}
+
+  .foot{margin-top:48px; color:var(--muted); font-size:12px; text-align:center; line-height:1.9}
+
+  .pick{accent-color:var(--accent); cursor:pointer; margin-right:4px}
+  .chip{
+    font-size:12px; color:#b3452f; background:#fdeeea; border:1px solid #f3d3cb;
+    padding:5px 10px; border-radius:999px;
+  }
+  .why{
+    font-size:11.5px; color:#b3452f; background:#fdf4f1; border-radius:7px;
+    padding:5px 9px; margin-top:2px;
+  }
+  .modal{
+    position:fixed; inset:0; background:rgba(24,24,27,.45); display:none;
+    align-items:center; justify-content:center; padding:28px; z-index:50;
+  }
+  .modal.on{display:flex}
+  .mbox{
+    background:var(--card); width:100%; max-width:1000px; height:100%;
+    border-radius:16px; display:flex; flex-direction:column; overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,.22);
+  }
+  .mhead{
+    display:flex; align-items:center; gap:12px; padding:14px 18px;
+    border-bottom:1px solid var(--line); background:#fbfaf7;
+  }
+  .mhead .mtitle{font-weight:650; font-size:14.5px; margin-right:4px}
+  .mhead input[type=search]{
+    flex:1; max-width:320px; border:1px solid var(--line); border-radius:9px;
+    padding:8px 12px; font-size:13px; font-family:inherit; background:#fff;
+  }
+  .mhead .cnt{font-size:12.5px; color:var(--muted)}
+  .mhead button{
+    border:1px solid var(--line); background:#fff; color:var(--ink);
+    padding:7px 14px; border-radius:9px; font-size:13px; cursor:pointer; font-family:inherit;
+  }
+  .mbody{flex:1; overflow:auto; padding:8px 18px 18px}
+  .erow{
+    display:grid; grid-template-columns:34px 1fr 1.15fr; gap:12px;
+    padding:11px 6px; border-bottom:1px solid #f0ece5; align-items:start;
+  }
+  .erow.changed{background:#fdf6e9}
+  .enum{font-size:11.5px; color:#b9b9bd; padding-top:6px; text-align:right}
+  .eorig{font-size:12.5px; color:#7c7c82; line-height:1.55; padding-top:5px; word-break:break-word}
+  .enow{
+    width:100%; border:1px solid var(--line); border-radius:9px; padding:7px 9px;
+    font-size:12.8px; font-family:inherit; line-height:1.55; color:var(--ink);
+    resize:vertical; min-height:38px; background:#fff; outline:none;
+  }
+  .enow:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+  .mfoot{
+    border-top:1px solid var(--line); padding:12px 18px; display:flex;
+    align-items:center; gap:12px; background:#fbfaf7;
+  }
+  .mfoot .hint{font-size:12px; color:var(--muted); flex:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>保格式翻译</h1>
+    <p class="sub">合同 / 报价单 / 工程量清单 · Word 与 Excel 原地翻，格式不动</p>
+  </header>
+
+  <div class="engine" id="engine">
+    <label><input type="radio" name="eng" value="cloud" checked> 云端翻译（质量最好，一份约 5 分钱）</label>
+    <label><input type="radio" name="eng" value="local"> 本地翻译（重要文件防泄漏用这个，翻译会稍差）</label>
+  </div>
+  <div class="ollrow" id="ollrow">
+    <span>本地模型地址</span>
+    <input id="ollurl" placeholder="留空=用本机。可以填多个，用逗号隔开：内网地址,Tailscale地址">
+    <button id="ollsave">保存</button>
+  </div>
+
+  <label class="bi" id="biwrap">
+    <input type="checkbox" id="bilingual">
+    <span>双语对照（原文和译文放在同一格里）</span>
+  </label>
+
+  <div class="tabs">
+    <button class="tab on" data-tab="trans">合同翻译</button>
+    <button class="tab" data-tab="conv">文件转换</button>
+  </div>
+
+  <div id="tab-trans">
+  <div class="keybar" id="keybar">
+    <span id="keymsg">还没填 API Key，翻译跑不起来。</span>
+    <select id="prov"></select>
+    <input id="keyinput" type="password" placeholder="把 sk- 开头的 key 粘进来">
+    <input id="customUrl" class="cx" placeholder="接口地址，如 https://xxx/v1/chat/completions">
+    <input id="customModel" class="cx" placeholder="模型名，如 gpt-4o-mini">
+    <button id="keysave">保存</button>
+    <button id="keytest">测试一下</button>
+  </div>
+
+  <div class="dirs">
+    <button data-dir="en2zh" class="active">英 → 中</button>
+    <button data-dir="zh2en">中 → 英</button>
+  </div>
+
+  <div class="drop" id="drop">
+    <div class="ico">📄</div>
+    <div class="t1">把 xlsx 或 docx 拖到这里</div>
+    <div class="t2">或者点击选择文件 · 可一次放多个</div>
+    <input type="file" id="file" multiple accept=".xlsx,.docx">
+  </div>
+
+  <div class="list" id="list"></div>
+  </div><!-- /tab-trans -->
+
+  <div id="tab-conv" style="display:none">
+    <div class="drop" id="cdrop">
+      <div class="ico">🔁</div>
+      <div class="t1">把文件拖到这里，或者点一下选择</div>
+      <div class="t2">PDF、Word、Excel、PPT、图片… 270 种格式</div>
+      <input type="file" id="cfile" multiple>
+    </div>
+    <div class="convbar">
+      <span>转成：</span>
+      <select id="cto"></select>
+      <span class="convhint" id="chint"></span>
+    </div>
+    <div class="list" id="clist"></div>
+  </div>
+
+  <div class="foot">
+    术语锁定 · 数字型号原样保留 · 公式不受影响<br>
+    翻完可以点「回译体检」，看看哪几句往回走的时候变了样<br>
+    <span class="setlink" id="setlink">更换翻译供应商 / 填 API Key</span>
+    &nbsp;·&nbsp;
+    <span class="setlink" id="verlink">版本 <b id="ver">—</b></span>
+    &nbsp;·&nbsp;
+    <span class="setlink" id="updlink">检查更新</span>
+  </div>
+</div>
+
+<div class="modal" id="suggModal">
+  <div class="mbox">
+    <div class="mhead">
+      <span class="mtitle" id="suggTitle">发现新词</span>
+      <input type="search" id="sq" placeholder="搜英文或中文…">
+      <span class="cnt" id="scnt"></span>
+      <button id="sclose">关闭</button>
+    </div>
+    <div class="mbody" id="sbody"></div>
+    <div class="mfoot">
+      <span class="hint">勾上的会写进术语表，以后翻译立刻按它来</span>
+      <button id="ssave">加入术语表</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="mbox">
+    <div class="mhead">
+      <span class="mtitle" id="mtitle">逐条校对</span>
+      <input type="search" id="q" placeholder="搜原文或译文…">
+      <span class="cnt" id="mcnt">未修改</span>
+      <button id="mclose">关闭</button>
+    </div>
+    <div class="mbody" id="mbody"></div>
+    <div class="mfoot">
+      <span class="hint">改完直接关闭，再点「下载译文」就是改过的版本</span>
+      <button id="msave">好，去下载</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let direction = "en2zh";
+const drop = document.getElementById("drop");
+const fileInput = document.getElementById("file");
+const list = document.getElementById("list");
+
+document.querySelectorAll(".dirs button").forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll(".dirs button").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    direction = b.dataset.dir;
+  };
+});
+
+drop.onclick = () => fileInput.click();
+fileInput.onchange = () => { handle([...fileInput.files]); fileInput.value = ""; };
+["dragenter","dragover"].forEach(ev => drop.addEventListener(ev, e => {
+  e.preventDefault(); drop.classList.add("over");
+}));
+["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => {
+  e.preventDefault(); drop.classList.remove("over");
+}));
+drop.addEventListener("drop", e => {
+  const files = [...e.dataTransfer.files].filter(f => /\.(xlsx|docx)$/i.test(f.name));
+  if (!files.length) { alert("只支持 .xlsx 和 .docx"); return; }
+  handle(files);
+});
+
+function el(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text != null) n.textContent = text;
+  return n;
+}
+
+async function handle(files) {
+  for (const f of files) await runOne(f);
+}
+
+function runOne(file) {
+  return new Promise(resolve => {
+    const dir = direction;
+    const bi = document.getElementById("bilingual").checked;
+    const mode = document.querySelector('input[name=eng]:checked').value;
+    const ollUrl = document.getElementById("ollurl").value.trim();
+    const card = el("div", "task");
+    const row1 = el("div", "row");
+    row1.appendChild(el("div", "fname", file.name));
+    const status = el("div", "status", "读取中…");
+    row1.appendChild(status);
+    const bar = el("div", "bar"); bar.appendChild(document.createElement("i"));
+    const barWrap = el("div"); barWrap.appendChild(bar);
+    card.append(row1, barWrap);
+    list.prepend(card);
+    const fill = bar.firstChild;
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const b64 = reader.result.split(",")[1];
+      status.textContent = "上传中…";
+      const t0 = Date.now();
+      try {
+        const res = await fetch("/api/translate", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({name: file.name, data: b64, direction: dir, bilingual: bi, mode,
+                                ollama_url: ollUrl, provider: document.getElementById("prov").value})
+        });
+        const job = await res.json();
+        if (job.error) throw new Error(job.error);
+        status.textContent = "排队中…";
+        poll(job.id, job.out_name, dir, status, fill, bar, card, t0, resolve);
+      } catch (e) {
+        status.textContent = "失败：" + e.message;
+        status.className = "status err"; bar.className = "bar err";
+        resolve();
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function poll(id, outName, dir, status, fill, bar, card, t0, resolve) {
+  while (true) {
+    await new Promise(r => setTimeout(r, 600));
+    let j;
+    try { j = await (await fetch("/api/job/" + id)).json(); } catch (e) { continue; }
+    if (j.state === "running" || j.state === "queued") {
+      const pct = j.total ? Math.round(j.done / j.total * 100) : 3;
+      fill.style.width = Math.max(3, pct) + "%";
+      status.textContent = j.total ? `翻译中 ${j.done} / ${j.total} 条` : "准备中…";
+    } else if (j.state === "done") {
+      fill.style.width = "100%";
+      const secs = ((Date.now() - t0) / 1000).toFixed(1);
+      status.textContent = `完成 · ${j.total} 条 · ${secs} 秒`;
+      status.className = "status ok";
+      const acts = el("div", "acts");
+      const a = el("a", "dl", "下载译文");
+      a.href = "/api/file/" + id;
+      a.download = outName;
+      const btn = el("button", "ghost", "回译体检");
+      btn.onclick = () => runCheck(id, dir, card, btn);
+      const btnTerm = el("button", "ghost", "发现新词");
+      btnTerm.onclick = () => openSuggest(id, btnTerm);
+      acts.appendChild(btnTerm);
+      // 翻译完后台自动在找词，找到了就把按钮变成「新词 N 个」
+      let tries = 0;
+      const pollSuggest = setInterval(async () => {
+        tries++;
+        if (tries > 100) { clearInterval(pollSuggest); return; }
+        try {
+          const d = await (await fetch("/api/suggestions/" + id)).json();
+          if (d.items && d.items.length) {
+            clearInterval(pollSuggest);
+            btnTerm.textContent = "新词 " + d.items.length + " 个";
+            btnTerm.classList.add("hot");
+            btnTerm.onclick = () => {
+              suggItems = d.items;
+              renderSuggest(d.items);
+              suggModal.classList.add("on");
+            };
+          } else if (d.done) {
+            clearInterval(pollSuggest);
+          }
+        } catch (e) {}
+      }, 3000);
+      const btn2 = el("button", "ghost", "逐条改");
+      btn2.onclick = () => openEditor(id, outName);
+      acts.append(a, btn, btn2);
+      fetch("/api/issues/" + id).then(r => r.json()).then(d => {
+        if (!d || !d.count) return;
+        acts.appendChild(el("span", "chip", "⚠ " + d.count + " 条可疑"));
+        const btn3 = el("button", "ghost", "看可疑的");
+        btn3.onclick = () => openEditor(id, outName, d.issues);
+        acts.appendChild(btn3);
+        const btn4 = el("button", "ghost", "一键重译");
+        btn4.onclick = async () => {
+          btn4.disabled = true;
+          btn4.textContent = "重译中…";
+          try {
+            const r = await (await fetch("/api/fix-all", {
+              method: "POST", headers: {"Content-Type": "application/json"},
+              body: JSON.stringify({id})
+            })).json();
+            if (r.error) throw new Error(r.error);
+            btn4.textContent = "重译了 " + r.fixed + " 条";
+            setTimeout(() => location.reload(), 900);
+          } catch (e) {
+            btn4.textContent = "失败了";
+            btn4.disabled = false;
+          }
+        };
+        acts.appendChild(btn4);
+      }).catch(() => {});
+      card.appendChild(acts);
+      resolve();
+      return;
+    } else {
+      status.textContent = "失败：" + (j.error || "未知错误");
+      status.className = "status err";
+      bar.className = "bar err";
+      resolve();
+      return;
+    }
+  }
+}
+
+async function runCheck(jobId, dir, card, btn) {
+  btn.disabled = true;
+  btn.textContent = "体检中…";
+  const box = el("div", "check");
+  box.textContent = "准备中…";
+  card.appendChild(box);
+  try {
+    const r = await fetch("/api/check", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({id: jobId, direction: dir})
+    });
+    const {id} = await r.json();
+    while (true) {
+      await new Promise(res => setTimeout(res, 700));
+      const c = await (await fetch("/api/check/" + id)).json();
+      if (c.state === "running" || c.state === "queued") {
+        box.textContent = c.total ? `回译中 ${c.done} / ${c.total} 条…` : "准备中…";
+      } else if (c.state === "done") {
+        btn.textContent = "再检一次";
+        btn.disabled = false;
+        box.textContent = "";
+        if (!c.items.length) {
+          box.appendChild(el("div", "check-head", "回译一遍，没发现明显走样。"));
+          return;
+        }
+        box.appendChild(el("div", "check-head",
+          `回译后有 ${c.count} 处跟原文对不上，从最不像的开始（是线索，不是错误清单）：`));
+        c.items.slice(0, 15).forEach(it => {
+          const d = el("div", "check-item");
+          d.append(el("div", "co", it.orig), el("div", "cb", it.back), el("div", "cr", it.ratio));
+          box.appendChild(d);
+        });
+        return;
+      } else {
+        box.textContent = "体检失败：" + (c.error || "未知错误");
+        btn.disabled = false;
+        return;
+      }
+    }
+  } catch (e) {
+    box.textContent = "体检失败：" + e.message;
+    btn.disabled = false;
+  }
+}
+
+/* ---------- 逐条校对 ---------- */
+const modal = document.getElementById("modal");
+const mbody = document.getElementById("mbody");
+
+async function openEditor(id, outName, issues) {
+  mbody.textContent = "读取中…";
+  modal.classList.add("on");
+  document.getElementById("mtitle").textContent =
+    outName + (issues ? " · 只看可疑的 " + issues.length + " 条" : "");
+  let data;
+  try {
+    data = await (await fetch("/api/entries/" + id)).json();
+  } catch (e) {
+    mbody.textContent = "读取失败：" + e.message;
+    return;
+  }
+  if (data.error) { mbody.textContent = "读取失败：" + data.error; return; }
+  const {orig, now, edits} = data;
+  const only = issues ? new Set(issues.map(x => x.i)) : null;
+  const why = {};
+  (issues || []).forEach(x => { why[x.i] = x; });
+  mbody.innerHTML = "";
+  const frag = document.createDocumentFragment();
+  const rows = [];
+  orig.forEach((o, i) => {
+    if (!o || !o.trim()) return;
+    if (only && !only.has(i)) return;
+    if (!only && !/[A-Za-z\u4e00-\u9fff]/.test(o)) return;
+    const row = el("div", "erow");
+    row.dataset.text = (o + " " + (now[i] || "")).toLowerCase();
+    row.appendChild(el("div", "enum", String(i)));
+    row.appendChild(el("div", "eorig", o));
+    const ta = document.createElement("textarea");
+    ta.className = "enow";
+    ta.value = now[i] != null ? now[i] : "";
+    ta.dataset.i = i;
+    ta.rows = Math.min(6, Math.max(2, Math.ceil(ta.value.length / 42)));
+    if (edits[i] != null) row.classList.add("changed");
+    ta.addEventListener("input", () => {
+      row.classList.add("changed");
+      row.dataset.text = (o + " " + ta.value).toLowerCase();
+      queueEdit(id, Number(i), ta.value, row);
+    });
+    row.appendChild(ta);
+    if (why[i]) {
+      const tag = el("div", "why", "⚠ " + why[i].kind + " · " + why[i].detail);
+      tag.style.gridColumn = "2 / 4";
+      row.appendChild(tag);
+    }
+    rows.push(row);
+    frag.appendChild(row);
+  });
+  mbody.appendChild(frag);
+  updateCnt(edits);
+
+  document.getElementById("q").value = "";
+  document.getElementById("q").oninput = (e) => {
+    const k = e.target.value.trim().toLowerCase();
+    rows.forEach(r => {
+      r.style.display = (!k || r.dataset.text.includes(k)) ? "" : "none";
+    });
+  };
+}
+
+const editTimers = {};
+function queueEdit(id, i, text, row) {
+  clearTimeout(editTimers[i]);
+  editTimers[i] = setTimeout(async () => {
+    try {
+      const r = await fetch("/api/edit", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({id, i, text})
+      });
+      const d = await r.json();
+      if (d.ok) {
+        updateCntNum(d.edits);
+        const same = text === (document.querySelector(`.enow[data-i="${i}"]`) || {}).defaultValue;
+      }
+    } catch (e) {}
+  }, 450);
+}
+
+function updateCnt(edits) {
+  updateCntNum(Object.keys(edits || {}).length);
+}
+function updateCntNum(n) {
+  document.getElementById("mcnt").textContent = n ? `已改 ${n} 条` : "未修改";
+}
+
+document.getElementById("mclose").onclick = () => modal.classList.remove("on");
+document.getElementById("msave").onclick = () => modal.classList.remove("on");
+modal.addEventListener("click", e => { if (e.target === modal) modal.classList.remove("on"); });
+
+/* ---------- 发现新词 ---------- */
+const suggModal = document.getElementById("suggModal");
+const sbody = document.getElementById("sbody");
+let suggItems = [];
+
+async function openSuggest(id, btn) {
+  btn.disabled = true;
+  btn.textContent = "找词中…";
+  try {
+    const r = await (await fetch("/api/suggest", {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({id})
+    })).json();
+    const sid = r.id;
+    while (true) {
+      await new Promise(res => setTimeout(res, 1500));
+      const st = await (await fetch("/api/suggest/" + sid)).json();
+      if (st.state === "running" || st.state === "queued") {
+        btn.textContent = "找词中…";
+        continue;
+      }
+      btn.disabled = false;
+      if (st.state !== "done") {
+        btn.textContent = "发现新词";
+        alert("找词失败：" + (st.error || ""));
+        return;
+      }
+      suggItems = st.items || [];
+      btn.textContent = suggItems.length ? "发现 " + suggItems.length + " 个新词" : "发现新词";
+      renderSuggest(suggItems);
+      suggModal.classList.add("on");
+      return;
+    }
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = "发现新词";
+    alert("失败：" + e.message);
+  }
+}
+
+function renderSuggest(items) {
+  sbody.innerHTML = "";
+  document.getElementById("scnt").textContent = items.length + " 个候选";
+  if (!items.length) {
+    sbody.textContent = "这份文件里没有发现表外的新词。";
+    return;
+  }
+  const frag = document.createDocumentFragment();
+  items.forEach((it, k) => {
+    const row = el("div", "erow");
+    row.dataset.text = ((it.en || "") + " " + (it.zh || "")).toLowerCase();
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.dataset.en = it.en || "";
+    cb.className = "pick";
+    const left = el("div", "eorig");
+    left.appendChild(cb);
+    left.appendChild(document.createTextNode(" " + (it.en || "") + (it.count ? "  ×" + it.count : "")));
+    const ta = document.createElement("input");
+    ta.className = "enow";
+    ta.value = it.zh || "";
+    ta.dataset.i = k;
+    row.append(left, ta);
+    frag.appendChild(row);
+  });
+  sbody.appendChild(frag);
+
+  document.getElementById("sq").value = "";
+  document.getElementById("sq").oninput = (e) => {
+    const k = e.target.value.trim().toLowerCase();
+    [...sbody.children].forEach(r => {
+      r.style.display = (!k || (r.dataset.text || "").includes(k)) ? "" : "none";
+    });
+  };
+}
+
+document.getElementById("sclose").onclick = () => suggModal.classList.remove("on");
+suggModal.addEventListener("click", e => { if (e.target === suggModal) suggModal.classList.remove("on"); });
+document.getElementById("ssave").onclick = async () => {
+  const picks = [];
+  sbody.querySelectorAll(".pick").forEach(cb => {
+    if (!cb.checked) return;
+    const row = cb.closest(".erow");
+    const inp = row.querySelector(".enow");
+    picks.push({en: cb.dataset.en, zh: inp.value.trim()});
+  });
+  const valid = picks.filter(p => p.zh);
+  if (!valid.length) { alert("先勾几条，并把中文填上"); return; }
+  const r = await (await fetch("/api/terms-add", {
+    method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({items: valid})
+  })).json();
+  if (r.ok) {
+    alert("已加入 " + r.added + " 条，术语表现在共 " + r.total + " 条。下次翻译就按新表来。");
+    suggModal.classList.remove("on");
+  } else {
+    alert("加入失败：" + (r.error || ""));
+  }
+};
+
+/* ---------- API Key / 供应商 ---------- */
+const keybar = document.getElementById("keybar");
+const provSel = document.getElementById("prov");
+let cfgCache = {};
+
+async function checkKey() {
+  try {
+    const c = await (await fetch("/api/config")).json();
+    cfgCache = c;
+    keybar.classList.toggle("on", !c.has_key);
+    fillProviders(c);
+    return c.has_key;
+  } catch (e) { return true; }
+}
+
+function fillProviders(c) {
+  provSel.innerHTML = "";
+  (c.providers || []).forEach(p => {
+    const o = document.createElement("option");
+    o.value = p.id;
+    o.textContent = p.name;
+    if (p.id === c.provider) o.selected = true;
+    provSel.appendChild(o);
+  });
+  syncProviderUI();
+}
+
+function syncProviderUI() {
+  const p = provSel.value;
+  const filled = (cfgCache.keys || {})[p];
+  document.getElementById("keyinput").value = "";
+  document.getElementById("keyinput").placeholder =
+    filled ? "已填过（想换就重新粘一串）" : "把 sk- 开头的 key 粘进来";
+  const isCustom = p === "custom";
+  document.getElementById("customUrl").classList.toggle("on", isCustom);
+  document.getElementById("customModel").classList.toggle("on", isCustom);
+  if (isCustom) {
+    document.getElementById("customUrl").value = cfgCache.custom_url || "";
+    document.getElementById("customModel").value = cfgCache.custom_model || "";
+  }
+  const names = {deepseek:"DeepSeek", openai:"OpenAI", zhipu:"智谱 GLM", moonshot:"Kimi",
+                 qwen:"通义千问", claude:"Claude", custom:"自定义接口"};
+  document.getElementById("keymsg").textContent =
+    (filled ? "当前：" : "还没填 ") + (names[p] || p) + " 的 Key";
+}
+provSel.onchange = syncProviderUI;
+document.getElementById("setlink").onclick = () => {
+  // 设置框在翻译页签里，先切回去再显示，否则用户点了看不到
+  const tabs = document.querySelectorAll(".tab");
+  tabs.forEach(t => t.classList.toggle("on", t.dataset.tab === "trans"));
+  const tt = document.getElementById("tab-trans");
+  const tc = document.getElementById("tab-conv");
+  if (tt) tt.style.display = "";
+  if (tc) tc.style.display = "none";
+  keybar.classList.add("on");
+  keybar.scrollIntoView({behavior: "smooth", block: "center"});
+};
+
+// 测一下这把 Key 通不通
+document.getElementById("keytest").onclick = async () => {
+  const btn = document.getElementById("keytest");
+  const v = document.getElementById("keyinput").value.trim();
+  btn.disabled = true;
+  const old = btn.textContent;
+  btn.textContent = "测试中…";
+  try {
+    const r = await (await fetch("/api/test-key", {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({provider: provSel.value, api_key: v})
+    })).json();
+    if (r.ok) {
+      alert("✅ 这把 Key 能用（尾号 " + r.tail + "）");
+    } else {
+      alert("❌ " + (r.error || "失败"));
+    }
+  } catch (e) {
+    alert("测试失败：" + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = old;
+  }
+};
+document.getElementById("keysave").onclick = async () => {
+  const v = document.getElementById("keyinput").value.trim();
+  const provider = provSel.value;
+  const already = (cfgCache.keys || {})[provider];
+  if (!v && !already) { alert("先把 Key 粘进来"); return; }
+  const payload = {provider};
+  if (v) payload.api_key = v;
+  if (provider === "custom") {
+    payload.custom_url = document.getElementById("customUrl").value.trim();
+    payload.custom_model = document.getElementById("customModel").value.trim();
+  }
+  const r = await (await fetch("/api/config", {
+    method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(payload)
+  })).json();
+  if (r.ok) {
+    document.getElementById("keyinput").value = "";
+    await checkKey();
+
+/* ---------- 自动更新 ---------- */
+(function () {
+  const verEl = document.getElementById("ver");
+  const upLink = document.getElementById("updlink");
+
+  fetch("/api/version").then(r => r.json()).then(d => {
+    verEl.textContent = d.version || "?";
+  }).catch(() => { verEl.textContent = "?" });
+
+  async function checkUpdate(auto) {
+    const old = upLink.textContent;
+    upLink.textContent = "检查中…";
+    try {
+      const d = await (await fetch("/api/update-check")).json();
+      if (d.error) {
+        if (!auto) alert("检查失败：" + d.error);
+        upLink.textContent = old;
+        return;
+      }
+      if (!d.has_update) {
+        upLink.textContent = "已是最新";
+        setTimeout(() => { upLink.textContent = old; }, 2500);
+        return;
+      }
+      upLink.textContent = "有新版本 " + d.latest;
+      const go = confirm(
+        "发现新版本：" + d.latest + "（当前 " + d.current + "）\n\n" +
+        (d.notes ? d.notes + "\n\n" : "") +
+        "要现在更新吗？软件会自己下载并重启。");
+      if (!go) { upLink.textContent = old; return; }
+      upLink.textContent = "下载中…";
+      const r = await (await fetch("/api/update-apply", {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({url: d.url})
+      })).json();
+      if (r.error) {
+        alert("更新失败：" + r.error);
+        upLink.textContent = old;
+        return;
+      }
+      upLink.textContent = "重启中…";
+      alert("更新完成（替换了 " + r.files + " 个文件）。\n软件马上重启。");
+      await fetch("/api/restart", {method: "POST"});
+    } catch (e) {
+      if (!auto) alert("检查失败：" + e.message);
+      upLink.textContent = old;
+    }
+  }
+
+  upLink.onclick = () => checkUpdate(false);
+  // 启动 4 秒后自动查一次（不打扰，只在有新版时弹窗）
+  setTimeout(() => checkUpdate(true), 4000);
+})();
+
+    const names = {deepseek:"DeepSeek", openai:"OpenAI", zhipu:"智谱 GLM", moonshot:"Kimi",
+                   qwen:"通义千问", claude:"Claude", custom:"自定义接口"};
+    alert("已保存：" + (names[provider] || provider) +
+          (v ? "（尾号 " + v.slice(-4) + "）" : "") +
+          "\n\n现在可以翻译了。想确认 Key 能不能用，点「测试一下」。");
+    keybar.classList.toggle("on", !r.has_key);
+  } else {
+    alert("保存失败：" + (r.error || ""));
+  }
+};
+document.querySelectorAll('input[name=eng]').forEach(r => {
+  r.onchange = () => {
+    document.getElementById("ollrow").classList.toggle("on",
+      document.querySelector('input[name=eng]:checked').value === "local");
+  };
+});
+document.getElementById("ollsave").onclick = async () => {
+  const v = document.getElementById("ollurl").value.trim();
+  const r = await (await fetch("/api/config", {
+    method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ollama_url: v})
+  })).json();
+  if (r.ok) alert(v ? "已保存，以后本地翻译走这台机器：" + v : "已清空，本地翻译用自己电脑上的模型");
+};
+async function loadOllamaUrl() {
+  try {
+    const c = await (await fetch("/api/config")).json();
+    if (c.ollama_url) document.getElementById("ollurl").value = c.ollama_url;
+  } catch (e) {}
+}
+loadOllamaUrl();
+checkKey();
+
+/* ---------- 文件转换 ---------- */
+(function () {
+  const tabs = document.querySelectorAll(".tab");
+  tabs.forEach(t => {
+    t.onclick = () => {
+      tabs.forEach(x => x.classList.remove("on"));
+      t.classList.add("on");
+      document.getElementById("tab-trans").style.display = t.dataset.tab === "trans" ? "" : "none";
+      document.getElementById("tab-conv").style.display = t.dataset.tab === "conv" ? "" : "none";
+    };
+  });
+
+  const cdrop = document.getElementById("cdrop");
+  const cfile = document.getElementById("cfile");
+  const cto = document.getElementById("cto");
+  const clist = document.getElementById("clist");
+  const chint = document.getElementById("chint");
+
+  fetch("/api/convert-info").then(r => r.json()).then(d => {
+    if (!d.available) {
+      chint.textContent = "⚠ 转换引擎未安装，请联系管理员";
+      cdrop.style.opacity = .5;
+      cdrop.style.pointerEvents = "none";
+      return;
+    }
+    (d.formats || []).forEach(f => {
+      const o = document.createElement("option");
+      o.value = f; o.textContent = f.toUpperCase();
+      cto.appendChild(o);
+    });
+  }).catch(() => {});
+
+  cdrop.onclick = () => cfile.click();
+  cfile.onchange = () => { doConvert([...cfile.files]); cfile.value = ""; };
+  ["dragenter","dragover"].forEach(ev => cdrop.addEventListener(ev, e => {
+    e.preventDefault(); cdrop.classList.add("over");
+  }));
+  ["dragleave","drop"].forEach(ev => cdrop.addEventListener(ev, e => {
+    e.preventDefault(); cdrop.classList.remove("over");
+  }));
+  cdrop.addEventListener("drop", e => doConvert([...e.dataTransfer.files]));
+
+  function doConvert(files) {
+    if (!files || !files.length) return;
+    const to = cto.value;
+    files.forEach(f => one(f, to));
+  }
+
+  function one(file, to) {
+    const card = el("div", "task");
+    const row = el("div", "row");
+    row.appendChild(el("div", "fname", file.name));
+    const st = el("div", "status", "转换中…");
+    row.appendChild(st);
+    card.appendChild(row);
+    const acts = el("div", "acts");
+    card.appendChild(acts);
+    clist.prepend(card);
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const b64 = reader.result.split(",")[1];
+      const t0 = Date.now();
+      try {
+        const r = await fetch("/api/convert", {
+          method: "POST", headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({name: file.name, data: b64, to})
+        });
+        const d = await r.json();
+        if (d.error) throw new Error(d.error);
+        const secs = ((Date.now() - t0) / 1000).toFixed(1);
+        const kb = d.size ? " · " + Math.round(d.size / 1024) + " KB" : "";
+        st.textContent = "完成 · " + secs + " 秒" + kb;
+        st.className = "status ok";
+        const a = el("a", "dl", "下载 " + d.out_name);
+        a.href = "/api/convert-file/" + d.id;
+        a.setAttribute("download", d.out_name);
+        acts.appendChild(a);
+      } catch (e) {
+        st.textContent = "失败：" + e.message;
+        st.className = "status err";
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+})();
+
+</script>
+</body>
+</html>

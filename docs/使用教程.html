@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>保格式翻译 · 使用教程 / User Guide</title>
+<style>
+:root{--ink:#1b1c1e;--muted:#6b6b70;--line:#e5e0d8;--accent:#1f4e79;--warn:#b3452f;--bg:#fbfaf7}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Segoe UI","Microsoft YaHei UI","PingFang SC",system-ui,sans-serif;
+  line-height:1.85;font-size:15.5px}
+.wrap{max-width:820px;margin:0 auto;padding:56px 28px 120px}
+h1{font-size:30px;margin:0 0 8px;letter-spacing:.5px}
+h2{font-size:21px;margin:44px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+h3{font-size:17px;margin:28px 0 10px;color:var(--accent)}
+p{margin:12px 0}
+ul,ol{margin:12px 0;padding-left:26px}
+li{margin:6px 0}
+blockquote{margin:16px 0;padding:12px 18px;background:#fff7e6;border-left:4px solid #e0c080;
+  border-radius:0 8px 8px 0;color:#6d5417;font-size:14.5px}
+blockquote p{margin:4px 0}
+code{background:#f0ece4;padding:2px 6px;border-radius:5px;font-size:13.5px;
+  font-family:Consolas,"Courier New",monospace}
+pre{background:#2d2d30;color:#e8e8e8;padding:16px 18px;border-radius:10px;overflow:auto;font-size:13.5px}
+pre code{background:none;color:inherit;padding:0}
+table{border-collapse:collapse;width:100%;margin:16px 0;font-size:14.5px}
+th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+th{background:#f0ece4;font-weight:600}
+hr{border:none;border-top:1px solid var(--line);margin:36px 0}
+strong{font-weight:650}
+a{color:var(--accent)}
+.note{color:var(--warn)}
+
+.langbar{position:fixed;top:0;left:0;right:0;background:#f0ece4;border-bottom:1px solid #e5e0d8;
+  padding:10px 20px;display:flex;gap:8px;align-items:center;z-index:99;font-size:13.5px}
+.langbar span{color:#6b6b70;margin-right:6px}
+.langbar button{border:1px solid #d8d2c6;background:#fff;border-radius:999px;padding:6px 18px;
+  cursor:pointer;font-family:inherit;font-size:13.5px;color:#1f4e79}
+.langbar button.on{background:#1f4e79;border-color:#1f4e79;color:#fff}
+.wrap{padding-top:100px}
+body.en .zh{display:none}
+body:not(.en) .en{display:none}
+</style></head>
+<body>
+<div class="langbar">
+  <span>Language / 语言</span>
+  <button id="btnzh" class="on">中文</button>
+  <button id="btnen">English</button>
+</div>
+<div class="wrap">
+<div class="zh"><h1>保格式翻译 · 使用教程</h1>
+<blockquote><p>一个把合同、报价单、工程量清单翻成另一种语言的工具。</p><p><strong>排版原样保留</strong>：字体、边框、表格、公式都不动，只换文字。</p><p>支持 <code>.xlsx</code>（Excel）和 <code>.docx</code>（Word），方向英→中 / 中→英。</p></blockquote>
+<hr>
+<h2>一、先申请一个 API Key（只需一次）</h2>
+<p>翻译要用 AI，AI 是按用量收费的。<strong>一份 300 条左右的清单大约 2 毛钱</strong>，翻几十份也用不了几块钱。</p>
+<p>软件支持好几家 AI 供应商，<strong>任选一家有 Key 的就行</strong>。下面先讲最便宜的 DeepSeek，后面附其他几家。</p>
+<h3>1. 打开网站</h3>
+<p>浏览器访问：<strong>https://platform.deepseek.com</strong></p>
+<p>（这是 DeepSeek 的开放平台，不是聊天那个网页版。）</p>
+<h3>2. 注册并登录</h3>
+<p>用手机号注册，跟普通网站一样。</p>
+<h3>3. 充值（先别急，可能不用充）</h3>
+<p><strong>注册就送 6 元体验金。</strong></p>
+<p>6 块钱听着不多，但只拿来翻译能用很久——一份 88 条的清单才 5 分钱，6 元能翻一百多份。<strong>先用赠金就行，花完了再考虑充不充。</strong></p>
+<p>赠金用完之后：</p>
+<ul>
+<li>想继续用 → 充个十块二十块，能用几个月</li>
+<li><strong>不想充值</strong> → 有两个选择：</li>
+</ul>
+<p>  1. 切到「本地翻译」（文件不出内网，但质量差一档，见第五节）</p>
+<p>  2. <strong>找开发者要一个 Key</strong>，先用他的额度</p>
+<blockquote><p>赠金有没有期限，以平台页面显示为准。注册完进「账户余额」看一眼就知道了。</p></blockquote>
+<h3>4. 创建 API Key</h3>
+<ul>
+<li>左侧菜单找到 <strong>API Keys</strong></li>
+<li>点「创建 API Key」</li>
+<li>随便起个名字，比如 <code>翻译</code></li>
+<li>点确定</li>
+</ul>
+<h3>5. 复制并保存</h3>
+<p><strong>创建完只会显示一次</strong>，那串 <code>sk-</code> 开头的东西就是 Key。</p>
+<p>⚠️ 立刻复制，存到记事本里。关掉页面就再也看不到了，只能重新建一个。</p>
+<h3>6. 填进软件</h3>
+<p>打开软件，页面底下有一行小字「<strong>更换翻译供应商 / 填 API Key</strong>」，点开。</p>
+<ol>
+<li>下拉里选 <strong>DeepSeek</strong></li>
+<li>把 Key 粘进去</li>
+<li>点保存</li>
+</ol>
+<p><strong>只需要填一次</strong>，以后不再问。</p>
+<blockquote><p>每个人的 Key 各自保管。<strong>别把 Key 发到群里</strong>——谁拿到都能花你的钱。</p></blockquote>
+<hr>
+<h3>也可以换别家（各家注册网址）</h3>
+<p>软件支持 7 家，<strong>每家一把 Key 分开存</strong>，切换不会互相覆盖。想换哪个，下拉里选一下、粘上那家的 Key、保存就行。</p>
+<table><thead><tr><th>供应商</th><th>注册 / 控制台地址</th><th>价格感觉</th><th>备注</th></tr></thead><tbody>
+<tr><td><strong>DeepSeek</strong></td><td>https://platform.deepseek.com</td><td>最便宜</td><td>默认，推荐先用这个</td></tr>
+<tr><td><strong>智谱 GLM</strong></td><td>https://open.bigmodel.cn</td><td>便宜，有免费模型</td><td>国内，注册简单</td></tr>
+<tr><td><strong>月之暗面 Kimi</strong></td><td>https://platform.moonshot.cn</td><td>中等</td><td>国内</td></tr>
+<tr><td><strong>阿里通义千问</strong></td><td>https://bailian.console.aliyun.com</td><td>中等，有新用户额度</td><td>国内，用阿里云账号登录</td></tr>
+<tr><td><strong>OpenAI</strong></td><td>https://platform.openai.com</td><td>便宜（按美元计）</td><td>要有 OpenAI 账号和国际信用卡</td></tr>
+<tr><td><strong>Anthropic Claude</strong></td><td>https://console.anthropic.com</td><td><strong>贵，约 DeepSeek 的 3–4 倍</strong></td><td>国际信用卡</td></tr>
+<tr><td><strong>自定义</strong></td><td>自己填</td><td>看你接什么</td><td>任何 OpenAI 兼容接口都能接</td></tr>
+</tbody></table>
+<p><strong>拿 Key 的步骤各家大同小异</strong>：注册 → 找到「API Keys」或「密钥管理」→ 创建 → 复制那串 Key。</p>
+<p>⚠️ <strong>两件事必须知道</strong>：</p>
+<ol>
+<li><strong>价格以各家页面为准</strong>，上面只是大致感觉。DeepSeek 是目前最划算的，合同翻译用它够了。</li>
+<li><strong>换别家，术语表和歧义词表的效果会打折</strong>。这套东西是围着 DeepSeek 调的——它比较听话，让它“严格按表译”就真按表。有些模型会自作主张改写，术语一致性会变差。<strong>换之前先拿一份文件试，别直接翻重要合同。</strong></li>
+</ol>
+<hr>
+<h2>二、安装</h2>
+<h3>1. 解压</h3>
+<p>把压缩包解压到电脑上任意位置，比如 <code>D:\保格式翻译</code>。</p>
+<blockquote><p>⚠️ <strong>整个文件夹一起用。</strong> 里面那个 <code>_internal</code> 文件夹是程序本体，只把 exe 拖出来是跑不起来的。</p></blockquote>
+<h3>2. 双击</h3>
+<p>双击 <strong><code>保格式翻译.exe</code></strong>。</p>
+<p>会弹出一个叫「保格式翻译」的窗口。第一次打开可能慢几秒，等一下。</p>
+<blockquote><p>如果没弹出来，看任务栏是不是被挡住了；再不行重启一次电脑。</p></blockquote>
+<hr>
+<h2>三、翻译一个文件</h2>
+<ol>
+<li>把文件<strong>拖到虚线框里</strong>（或者点一下框选择文件），可以一次放好几个</li>
+<li>上面选语言方向：<strong>英 → 中</strong> 或 <strong>中 → 英</strong></li>
+<li>等进度条走完（会显示「翻译中 42 / 88 条」）</li>
+<li>点「下载译文」</li>
+</ol>
+<p>翻完之后，那行下面还会多几个按钮：</p>
+<table><thead><tr><th>按钮</th><th>是干什么的</th></tr></thead><tbody>
+<tr><td><strong>下载译文</strong></td><td>拿成品</td></tr>
+<tr><td><strong>回译体检</strong></td><td>把译文再翻回原文语言，跟原文比，找出可能翻歪的句子</td></tr>
+<tr><td><strong>逐条改</strong></td><td>左边原文、右边译文，直接改字，改完重新下载就是新版</td></tr>
+<tr><td><strong>看可疑的</strong></td><td>只看系统挑出来的可疑条目（数字对不上、术语没用表里的、漏译的）</td></tr>
+<tr><td><strong>发现新词</strong></td><td>把这份文件里术语表没收录的词挑出来，你勾选后加进去</td></tr>
+<tr><td><strong>一键重译</strong></td><td>把那几条可疑的送回去重翻</td></tr>
+</tbody></table>
+<h3>两个开关</h3>
+<p><strong>双语对照</strong>：勾上后，原文和译文放在同一个格子里（原文在上、译文在下）。给领导看、或者自己核对时用。Word 暂不支持。</p>
+<p><strong>引擎</strong>：</p>
+<ul>
+<li><strong>云端翻译</strong>（默认）：质量最好，一份约 2 毛钱</li>
+<li><strong>本地翻译</strong>：重要文件防泄漏用这个，翻译会稍差（见下一节）</li>
+</ul>
+<hr>
+<h2>四、文件转换（另一个页签）</h2>
+<p>软件顶上还有第二个页签：<strong>文件转换</strong>。它能把 PDF 转 Word、Word 转 PDF、图片换格式…… 一共 270 种格式。</p>
+<h3>为什么会有这个</h3>
+<p>因为客户发来的合同常常是 <strong>PDF</strong>，翻译不了。用它转成 Word，再翻。</p>
+<pre><code>PDF（客户发来的） → 文件转换 → Word → 合同翻译 → 保格式的中文 Word</code></pre>
+<h3>怎么用</h3>
+<ol>
+<li>点顶上的「<strong>文件转换</strong>」</li>
+<li>把文件拖进去（也可以一次拖好几个）</li>
+<li>下面选要转成什么：PDF / DOCX / XLSX / PPTX / PNG / JPG / WEBP / TXT / CSV / HTML / EPUB / MD</li>
+<li>转完点「下载」</li>
+</ol>
+<h3>要知道的</h3>
+<ul>
+<li><strong>转换在本机完成</strong>，文件不上传、不花钱、断网也能用</li>
+<li>快：Word 转 PDF 大约 1–5 秒</li>
+<li>这个引擎是开源项目 <a href="https://github.com/KnifeLemon/Filee">Filee</a>，MIT 协议，跟着软件一起装好了</li>
+<li>少数特殊格式（比如 PDF 里带公式、扫描件）转出来可能不完美——它擅长的是常规文档</li>
+</ul>
+<hr>
+<h2>五、本地翻译（防泄漏）</h2>
+<p>这个模式<strong>文件不出公司内网</strong>，适合不能外发的合同。</p>
+<h3>什么情况用</h3>
+<ul>
+<li>合同里有甲方乙方真名、金额、违约条款，公司不允许传到外部服务器</li>
+<li>断网环境</li>
+</ul>
+<h3>怎么用</h3>
+<ol>
+<li>勾选「本地翻译」</li>
+<li>下面会出现「本地模型地址」这一栏</li>
+<li>填入管理员给你的地址（比如 <code>http://192.168.1.100:11434</code>）</li>
+<li>点保存</li>
+</ol>
+<p>保存后，再翻译就走那台机器了。</p>
+<h3>要注意的</h3>
+<ul>
+<li><strong>质量会差一档</strong>，长句容易翻散。重要文件建议翻完人工再过一遍，或者点「回译体检」查一遍</li>
+<li><strong>那台机器得开着</strong>，关了就用不了</li>
+<li><strong>一次只能一个人翻</strong>，别人在翻的时候你得排队</li>
+<li>地址要不到？说明你这台机器不能连内网那台，那就先用云端</li>
+</ul>
+<hr>
+<h2>六、钱的事</h2>
+<table><thead><tr><th>项目</th><th>大概多少钱</th></tr></thead><tbody>
+<tr><td>一份 88 条的清单</td><td>约 5 分钱</td></tr>
+<tr><td>一份 300 条的清单</td><td>约 2 毛钱</td></tr>
+<tr><td>一份几十页的合同</td><td>几毛到一块</td></tr>
+</tbody></table>
+<p>按用量走，不用不花钱。</p>
+<p><strong>注册送的 6 元赠金，够翻一百多份清单</strong>——正常用一两个月没问题。</p>
+<h3>6 块钱用完了，不想充值怎么办</h3>
+<p>两条路，都能接着用：</p>
+<ol>
+<li><strong>切「本地翻译」</strong>——不花钱，但文件要能连上公司内网那台机器，而且质量差一档（见第五节）</li>
+<li><strong>找开发者要一个 Key</strong>——先用他账上的额度，跟他说一声就行</li>
+</ol>
+<blockquote><p>别自己反复注册小号去薅赠金。平台会按手机号和实名认，薅多了封号，之前的活也白干。</p></blockquote>
+<hr>
+<h2>七、常见问题</h2>
+<p><strong>Q：填了 Key 还是报错「余额不足」？</strong></p>
+<p>去 platform.deepseek.com 看一下账户余额，充值后等一两分钟再试。</p>
+<p><strong>Q：提示「端口被占用」？</strong></p>
+<p>上次的程序没关干净。任务管理器里找「保格式翻译」，结束掉再重开。</p>
+<p><strong>Q：杀毒软件报警？</strong></p>
+<p>自己打包的小工具没有数字签名，个别杀毒软件会敏感。加信任即可。</p>
+<p><strong>Q：翻出来格式乱了？</strong></p>
+<p>不应该乱——程序只改文字，其他一个字节没动。真乱了把文件发给管理员看。</p>
+<p><strong>Q：能翻 PDF 吗？</strong></p>
+<p>暂时不能。先转成 Word 再翻。</p>
+<p><strong>Q：术语表能加词吗？</strong></p>
+<p>能。翻译完点「发现新词」，它会把表里没有的词挑出来，你勾选、改好译法，加进去就行，以后所有文件都按新表来。</p>
+<p><strong>Q：怎么知道哪句翻得不对？</strong></p>
+<p>点「回译体检」。它会翻回去跟原文比，把走样的句子列出来。<strong>注意：这是线索不是判决</strong>——列出来的不一定错，只是值得看一眼。</p>
+<hr>
+<h2>八、出问题找谁</h2>
+<p>把这三样发给管理员：</p>
+<ol>
+<li>出问题的那个文件</li>
+<li>屏幕上弹出的提示内容（截图也行）</li>
+<li>软件目录下的「运行日志.txt」</li>
+</ol>
+<p>有这三样，问题基本能定位。</p></div>
+<div class="en"><h1>Format-Preserving Translator · User Guide</h1>
+<blockquote><p>A tool that translates contracts, quotations and bills of quantities into another language.</p><p><strong>Layout stays exactly as it was</strong>: fonts, borders, tables and formulas are untouched — only the text changes.</p><p>Supports <code>.xlsx</code> (Excel) and <code>.docx</code> (Word), both English → Chinese and Chinese → English.</p></blockquote>
+<hr>
+<h2>1. Getting an API Key (one time only)</h2>
+<p>Translation is powered by AI and billed by usage. <strong>A 300-row bill of quantities costs roughly 20 fen (0.2 CNY)</strong> — even dozens of documents cost only a few yuan.</p>
+<p>The app supports several AI providers. <strong>Any one of them will work</strong> — you only need a key from one. DeepSeek is the cheapest and is described first; the others are listed below.</p>
+<h3>Step 1 — Open the website</h3>
+<p>Go to: <strong>https://platform.deepseek.com</strong></p>
+<p>(This is DeepSeek&#x27;s developer platform, not the chat website.)</p>
+<h3>Step 2 — Sign up and log in</h3>
+<p>Register with your phone number or email, the same as any other website.</p>
+<h3>Step 3 — Top-up (probably not needed yet)</h3>
+<p><strong>New accounts receive 6 CNY (¥6) of free credit.</strong></p>
+<p>That sounds small, but for translation it goes a long way — an 88-row BOQ costs about 5 fen, so ¥6 covers well over a hundred documents. <strong>Use the free credit first; decide about topping up later.</strong></p>
+<p>When the credit runs out:</p>
+<ul>
+<li>To keep going → top up 10–20 CNY, which lasts several months</li>
+<li><strong>If you would rather not pay</strong> → two options:</li>
+</ul>
+<p>  1. Switch to <strong>Local translation</strong> (files never leave the company network, but quality is one notch lower — see section 5)</p>
+<p>  2. <strong>Ask the developer for a key</strong> and use their quota temporarily</p>
+<blockquote><p>Whether the free credit expires depends on the platform — check the balance page after signing up.</p></blockquote>
+<h3>Step 4 — Create an API Key</h3>
+<ul>
+<li>In the left menu, find <strong>API Keys</strong></li>
+<li>Click <strong>Create API Key</strong></li>
+<li>Give it any name, e.g. <code>translate</code></li>
+<li>Confirm</li>
+</ul>
+<h3>Step 5 — Copy it and save it</h3>
+<p><strong>The key is displayed only once.</strong> It is the string starting with <code>sk-</code>.</p>
+<p>⚠️ Copy it immediately and paste it into a text file. Once you close the page you cannot see it again — you would have to create a new one.</p>
+<h3>Step 6 — Paste it into the app</h3>
+<p>At the bottom of the app window there is a small link: <strong>&quot;更换翻译供应商 / 填 API Key&quot;</strong> (Change provider / enter API key). Click it.</p>
+<ol>
+<li>Choose <strong>DeepSeek</strong> from the dropdown</li>
+<li>Paste the key</li>
+<li>Click Save</li>
+</ol>
+<p><strong>You only do this once.</strong> The app remembers it.</p>
+<blockquote><p>Keep your own key to yourself. <strong>Never post a key in a group chat</strong> — anyone who has it can spend your credit.</p></blockquote>
+<hr>
+<h3>Using a different provider</h3>
+<p>Seven providers are supported. <strong>Each key is stored separately</strong>, so switching back and forth does not overwrite anything. To switch: pick it in the dropdown, paste that provider&#x27;s key, save.</p>
+<table><thead><tr><th>Provider</th><th>Console / sign-up</th><th>Price level</th><th>Notes</th></tr></thead><tbody>
+<tr><td><strong>DeepSeek</strong></td><td>https://platform.deepseek.com</td><td>Cheapest</td><td>Default; recommended starting point</td></tr>
+<tr><td><strong>Zhipu GLM</strong></td><td>https://open.bigmodel.cn</td><td>Cheap, some models free</td><td>China-based, easy sign-up</td></tr>
+<tr><td><strong>Moonshot Kimi</strong></td><td>https://platform.moonshot.cn</td><td>Medium</td><td>China-based</td></tr>
+<tr><td><strong>Alibaba Qwen</strong></td><td>https://bailian.console.aliyun.com</td><td>Medium, new-user credit</td><td>Log in with an Alibaba Cloud account</td></tr>
+<tr><td><strong>OpenAI</strong></td><td>https://platform.openai.com</td><td>Cheap (billed in USD)</td><td>Needs an OpenAI account and an international card</td></tr>
+<tr><td><strong>Anthropic Claude</strong></td><td>https://console.anthropic.com</td><td><strong>Expensive — roughly 3–4× DeepSeek</strong></td><td>International card required</td></tr>
+<tr><td><strong>Custom</strong></td><td>You supply it</td><td>Depends</td><td>Any OpenAI-compatible endpoint</td></tr>
+</tbody></table>
+<p><strong>Getting a key works the same way everywhere</strong>: sign up → find &quot;API Keys&quot; → create → copy the string.</p>
+<p>⚠️ <strong>Two things you must know:</strong></p>
+<ol>
+<li><strong>Prices change — always check the provider&#x27;s own page.</strong> The table above is only a rough guide. DeepSeek is currently the best value and is good enough for contract work.</li>
+<li><strong>Switching providers degrades the terminology and ambiguity tables.</strong> Those were tuned around DeepSeek, which follows instructions closely — when told to use a fixed glossary it actually does. Some models rewrite freely, and term consistency drops. <strong>Test with one document before trusting a new provider with an important contract.</strong></li>
+</ol>
+<hr>
+<h2>2. Installation</h2>
+<h3>Unzip</h3>
+<p>Extract the archive anywhere you like, e.g. <code>D:\translation</code>.</p>
+<blockquote><p>⚠️ <strong>Keep the whole folder together.</strong> The <code>_internal</code> folder is the program itself; dragging the .exe out on its own will not work.</p></blockquote>
+<h3>Double-click</h3>
+<p>Double-click <strong><code>保格式翻译.exe</code></strong> (the file name is Chinese, meaning &quot;format-preserving translator&quot;).</p>
+<p>A window titled 保格式翻译 opens. The first launch may take a few seconds.</p>
+<blockquote><p>If no window appears, check the taskbar — it may be behind another window. If it still does not appear, restart the computer and try again.</p></blockquote>
+<hr>
+<h2>3. Translating a file</h2>
+<ol>
+<li><strong>Drag the file into the dashed box</strong> (or click the box to browse). Several files at once is fine.</li>
+<li>Choose the direction: <strong>英 → 中</strong> (English → Chinese) or <strong>中 → 英</strong> (Chinese → English).</li>
+<li>Wait for the progress bar (it shows &quot;翻译中 42 / 88 条&quot; = translating item 42 of 88).</li>
+<li>Click <strong>下载译文</strong> (Download translation).</li>
+</ol>
+<p>After that, extra buttons appear under the file:</p>
+<table><thead><tr><th>Button</th><th>What it does</th></tr></thead><tbody>
+<tr><td><strong>下载译文</strong></td><td>Get the finished file</td></tr>
+<tr><td><strong>回译体检</strong></td><td>Back-translates the result and compares it with the original to flag sentences that may have drifted</td></tr>
+<tr><td><strong>逐条改</strong></td><td>Side-by-side editor: original on the left, translation on the right — edit and re-download</td></tr>
+<tr><td><strong>看可疑的</strong></td><td>Shows only the suspicious items (number mismatch, glossary not followed, untranslated)</td></tr>
+<tr><td><strong>发现新词</strong></td><td>Finds terms in this document that are not yet in the glossary; tick the ones to add</td></tr>
+<tr><td><strong>一键重译</strong></td><td>Re-translate the flagged items</td></tr>
+</tbody></table>
+<h3>Two switches</h3>
+<p><strong>双语对照 (bilingual)</strong> — puts the original and the translation in the same cell (original on top, translation below). Useful for reviewing or for showing a manager. Not available for Word.</p>
+<p><strong>Engine:</strong></p>
+<ul>
+<li><strong>云端翻译 (cloud)</strong> — default, best quality, about 0.2 CNY per document</li>
+<li><strong>本地翻译 (local)</strong> — use this for confidential files; quality is slightly lower (see section 5)</li>
+</ul>
+<hr>
+<h2>4. File conversion (the second tab)</h2>
+<p>There is a second tab at the top: <strong>文件转换</strong> (file conversion). It converts PDF to Word, Word to PDF, changes image formats and so on — 270 formats in total.</p>
+<h3>Why it is here</h3>
+<p>Because contracts from clients often arrive as <strong>PDF</strong>, which cannot be translated directly. Convert it to Word first, then translate.</p>
+<pre><code>PDF (from the client) → File conversion → Word → Translate → Chinese Word, layout intact</code></pre>
+<h3>How to use it</h3>
+<ol>
+<li>Click <strong>文件转换</strong> at the top</li>
+<li>Drag files into the box (several at once is fine)</li>
+<li>Choose the target format below: PDF / DOCX / XLSX / PPTX / PNG / JPG / WEBP / TXT / CSV / HTML / EPUB / MD</li>
+<li>When it finishes, click the download button</li>
+</ol>
+<h3>Things worth knowing</h3>
+<ul>
+<li><strong>Conversion happens on your own computer</strong> — nothing is uploaded, it costs nothing, and it works offline</li>
+<li>It is fast: Word to PDF takes about 1–5 seconds</li>
+<li>The engine is the open-source project <a href="https://github.com/KnifeLemon/Filee">Filee</a> (MIT licence), installed together with this program</li>
+<li>Unusual content (formulas inside a PDF, scanned pages) may not come out perfectly — it is best at ordinary documents</li>
+</ul>
+<hr>
+<h2>5. Local translation (keeping files inside the company)</h2>
+<p>This mode <strong>never sends the file outside the company network</strong>. Use it for contracts that must not go to an external server.</p>
+<h3>When to use it</h3>
+<ul>
+<li>The contract contains real party names, amounts or penalty clauses that policy forbids sending externally</li>
+<li>There is no internet connection</li>
+</ul>
+<h3>How to use it</h3>
+<ol>
+<li>Select <strong>本地翻译 (local)</strong></li>
+<li>A field labelled <strong>本地模型地址</strong> (local model address) appears</li>
+<li>Enter the address your administrator gives you (for example <code>http://192.168.1.100:11434</code>)</li>
+<li>Click Save</li>
+</ol>
+<p>From then on, translation runs on that machine.</p>
+<h3>Keep in mind</h3>
+<ul>
+<li><strong>Quality is one notch lower</strong> — long sentences may break up. Have someone review the result, or run 回译体检 on it</li>
+<li><strong>That machine must be switched on</strong>; if it is off, local translation will not work</li>
+<li><strong>Only one person can translate at a time</strong> — if someone else is using it, you wait</li>
+<li>No address? Then your computer cannot reach the internal machine — use the cloud for now</li>
+</ul>
+<hr>
+<h2>6. Cost</h2>
+<table><thead><tr><th>Item</th><th>Roughly</th></tr></thead><tbody>
+<tr><td>An 88-row BOQ</td><td>about 5 fen (0.05 CNY)</td></tr>
+<tr><td>A 300-row BOQ</td><td>about 20 fen (0.2 CNY)</td></tr>
+<tr><td>A contract of a few dozen pages</td><td>a few jiao to one yuan</td></tr>
+</tbody></table>
+<p>Pay-as-you-go; nothing is charged when you are not translating.</p>
+<p><strong>The ¥6 sign-up credit covers well over a hundred BOQs</strong> — normally one or two months of use.</p>
+<h3>When the ¥6 runs out and you would rather not pay</h3>
+<p>Two ways to keep working:</p>
+<ol>
+<li><strong>Switch to local translation</strong> — free, but your computer must reach the company&#x27;s internal machine, and quality is one notch lower</li>
+<li><strong>Ask the developer for a key</strong> — use their quota for a while, just tell them</li>
+</ol>
+<blockquote><p>Do not register multiple accounts to farm the sign-up credit. Platforms identify users by phone number and real-name verification; repeated abuse gets accounts banned, and the work you already did is lost.</p></blockquote>
+<hr>
+<h2>7. FAQ</h2>
+<p><strong>Q: I entered the key but it still says &quot;insufficient balance&quot;.</strong></p>
+<p>Check your balance at the provider&#x27;s console. After topping up, wait a minute or two and try again.</p>
+<p><strong>Q: It says &quot;port is already in use&quot;.</strong></p>
+<p>A previous instance did not close properly. Open Task Manager, find 保格式翻译, end it, and start again.</p>
+<p><strong>Q: Antivirus software warns about the .exe.</strong></p>
+<p>The program is self-built and has no digital signature, so some antivirus products are cautious. Add it to the trusted list.</p>
+<p><strong>Q: The layout came out wrong.</strong></p>
+<p>It should not — the program only changes text; every other byte is untouched. If it really is broken, send the file to the developer.</p>
+<p><strong>Q: Can it translate PDFs?</strong></p>
+<p>Not yet. Convert to Word first.</p>
+<p><strong>Q: Can I add terms to the glossary?</strong></p>
+<p>Yes. After translating, click 发现新词 (find new terms). It lists words not yet in the glossary; tick them, adjust the translation, and add them. Every future document follows the updated glossary.</p>
+<p><strong>Q: How do I know which sentence is wrong?</strong></p>
+<p>Click 回译体检 (back-translation check). It translates the result back and compares it with the original, listing the sentences that drifted. <strong>Note: these are leads, not verdicts</strong> — a listed sentence is not necessarily wrong, it is just worth a look.</p>
+<hr>
+<h2>8. Reporting a problem</h2>
+<p>Send the developer these three things:</p>
+<ol>
+<li>The file that caused the problem</li>
+<li>The exact message shown (a screenshot is fine)</li>
+<li>The file <code>运行日志.txt</code> (run log) in the program folder</li>
+</ol>
+<p>With those three, most problems can be located quickly.</p></div>
+</div>
+<script>
+var bz = document.getElementById('btnzh'), be = document.getElementById('btnen');
+function setLang(en){
+  document.body.classList.toggle('en', en);
+  bz.classList.toggle('on', !en);
+  be.classList.toggle('on', en);
+  try { localStorage.setItem('guide_lang', en ? 'en' : 'zh'); } catch(e){}
+}
+bz.onclick = function(){ setLang(false); };
+be.onclick = function(){ setLang(true); };
+try { if (localStorage.getItem('guide_lang') === 'en') setLang(true); } catch(e){}
+</script>
+</body></html>

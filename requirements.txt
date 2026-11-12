@@ -1,0 +1,4 @@
+openpyxl>=3.1
+lxml>=5.0
+pywebview>=5.0
+pythonnet>=3.0
